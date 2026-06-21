@@ -337,3 +337,105 @@ local requestData = {
 }
 
 request(requestData)
+
+-- ==========================================================
+-- CONFIGURATION: Change your logo asset ID here
+-- ==========================================================
+local LOGO_IMAGE_ID = "rbxassetid://125779171427078" -- Replace 0 with your asset ID (e.g., "rbxassetid://12345678")
+-- ==========================================================
+
+-- Create Main ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CoconutPromptGui"
+ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main Card Container (The Dark Coconut Shell)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 400, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -210)
+MainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 26) -- Deep charcoal
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 24)
+MainCorner.Parent = MainFrame
+
+-- Coconut Logo (Now an ImageLabel!)
+local Logo = Instance.new("ImageLabel")
+local LogoCorner = Instance.new("UICorner")
+local LogoStroke = Instance.new("UIStroke")
+
+Logo.Name = "Logo"
+Logo.Size = UDim2.new(0, 80, 0, 80)
+Logo.Position = UDim2.new(0.5, -40, 0, 40)
+Logo.BackgroundColor3 = Color3.fromRGB(12, 12, 14) -- Dark inside background if image is transparent
+Logo.Image = LOGO_IMAGE_ID
+Logo.ScaleType = Enum.ScaleType.Fit -- Ensures your logo doesn't stretch weirdly
+Logo.Parent = MainFrame
+
+LogoCorner.CornerRadius = UDim.new(1, 0) -- Keeps it clipped cleanly to a perfect circle
+LogoCorner.Parent = Logo
+
+LogoStroke.Color = Color3.fromRGB(255, 255, 255) -- White "Coconut Meat" outer ring
+LogoStroke.Thickness = 4
+LogoStroke.Parent = Logo
+
+-- Prompt Text (Directly below the logo)
+local PromptText = Instance.new("TextLabel")
+PromptText.Name = "PromptText"
+PromptText.Size = UDim2.new(1, -60, 0, 80)
+PromptText.Position = UDim2.new(0, 30, 0, 140)
+PromptText.BackgroundTransparency = 1
+PromptText.Text = "Would you like to join our brand new Discord server?"
+PromptText.TextColor3 = Color3.fromRGB(255, 255, 255)
+PromptText.TextSize = 20
+PromptText.Font = Enum.Font.GothamBold
+PromptText.TextWrapped = true
+PromptText.Parent = MainFrame
+
+-- "Join Discord" Button (Solid White)
+local JoinButton = Instance.new("TextButton")
+local JoinCorner = Instance.new("UICorner")
+
+JoinButton.Name = "JoinButton"
+JoinButton.Size = UDim2.new(1, -60, 0, 50)
+JoinButton.Position = UDim2.new(0, 30, 0, 250)
+JoinButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Solid White
+JoinButton.Text = "Join Discord"
+JoinButton.TextColor3 = Color3.fromRGB(12, 12, 14) -- Dark text inside white button
+JoinButton.TextSize = 18
+JoinButton.Font = Enum.Font.GothamBold
+JoinButton.Parent = MainFrame
+
+JoinCorner.CornerRadius = UDim.new(0, 12)
+JoinCorner.Parent = JoinButton
+
+-- "No" Button (Dark / Minimal)
+local NoButton = Instance.new("TextButton")
+local NoCorner = Instance.new("UICorner")
+
+NoButton.Name = "NoButton"
+NoButton.Size = UDim2.new(1, -60, 0, 40)
+NoButton.Position = UDim2.new(0, 30, 0, 315)
+NoButton.BackgroundTransparency = 1 -- Ghost button style
+NoButton.Text = "No, thanks"
+NoButton.TextColor3 = Color3.fromRGB(113, 113, 122) -- Muted grey text
+NoButton.TextSize = 16
+NoButton.Font = Enum.Font.GothamMedium
+NoButton.Parent = MainFrame
+
+-- Simple Button Logic / Hookups
+JoinButton.MouseButton1Click:Connect(function()
+    local discord = "discord.gg/EsA7Zeh8rN"
+	setclipboard(discord)
+	JoinButton.Text = "Copied to clipboard"
+	wait(2)
+	JoinButton.Text = "Closing"
+	ScreenGui:Destroy()
+end)
+
+NoButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy() -- Closes the prompt
+end)
