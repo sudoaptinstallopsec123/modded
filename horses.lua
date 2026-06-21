@@ -4089,7 +4089,7 @@ end)
 local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu', 'logs')
 
 MenuGroup:AddButton('Unload', function() Library:Unload() end)
-MenuGroup:AddButton('Join Discord', function() Library:Notify("Copied to clipboard.") setclipboard("https://discord.gg/UkPDe8hF4p") end)
+MenuGroup:AddButton('Join Discord', function() Library:Notify("Copied to clipboard.") setclipboard("https://discord.gg/EsA7Zeh8rN") end)
 MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'RightShift', NoUI = true, Text = 'Menu keybind' })
 
 Library.ToggleKeybind = Options.MenuKeybind
