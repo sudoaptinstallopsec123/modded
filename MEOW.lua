@@ -5,7 +5,15 @@ if game.PlaceId == 107095834793267 then
 elseif game.PlaceId == 93623116896447 then
     loadstring(game:HttpGet("https://raw.githubusercontent.com/sudoaptinstallopsec123/modded/refs/heads/main/dumplings"))()
     
-elseif game.PlaceId == 6989310863 then
+elseif game.PlaceId == 6989310863 
+    or game.PlaceId == 15814370524 
+    or game.PlaceId == 15919880640 
+    or game.PlaceId == 16410236164 
+    or game.PlaceId == 16948692582 
+    or game.PlaceId == 16948702874 
+    or game.PlaceId == 16948761081 
+    or game.PlaceId == 18463964395 
+    or game.PlaceId == 18973280089 then
     loadstring(game:HttpGet("https://raw.githubusercontent.com/sudoaptinstallopsec123/modded/refs/heads/main/horses.lua"))()
 else
     local HttpService = game:GetService("HttpService")
