@@ -1,0 +1,367 @@
+-- idk, try to use this and figure out how the lib works ig?
+local httpService = game:GetService('HttpService')
+local repo = "https://raw.githubusercontent.com/uhfork/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+--make autosteal and make it modify time to use proximity prompt to 1 or 0 cause u can do that apparently
+
+Library.ForceCheckbox = false 
+Library.ShowToggleFrameInKeybinds = true
+
+local Loading = Library:CreateLoading({
+    Title = "coconut.xyz",
+    Icon = 125779171427078,
+    TotalSteps = 4
+})
+
+Loading:SetMessage("Initializing...")
+Loading:SetDescription("Waiting for game to load...")
+task.wait(1)
+ 
+Loading:SetCurrentStep(1)
+Loading:SetDescription("Loading configuration...")
+task.wait(1)
+
+Loading:SetCurrentStep(2)
+Loading:ShowSidebarPage(true)
+Loading.Sidebar:AddLabel("User: " .. game.Players.LocalPlayer.Name)
+Loading.Sidebar:AddLabel("Version: v1.0.0")
+task.wait(1)
+ 
+Loading:SetCurrentStep(3)
+Loading:SetDescription("Ready to start!")
+task.wait(1)
+ 
+Loading:SetCurrentStep(4)
+Loading:Continue()
+
+local Window = Library:CreateWindow({
+	Title = "coconut.xyz",
+	Footer = "version: 1.0.0",
+	Icon = 125779171427078,
+	CornerElements = false,
+	NotifySide = "Right",
+	ShowCustomCursor = true,
+})
+
+ThemeManager.BuiltInThemes = {
+		['Default'] =         { 1, httpService:JSONDecode('{"MainColor":"242328","AccentColor":"faa614","OutlineColor":"323232","BackgroundColor":"212025","FontColor":"ffffff"}') },
+        ['Gold'] =            { 2, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"373737","AccentColor":"e0d6b5","BackgroundColor":"232323","OutlineColor":"4b4b4b"}') },
+        ['Gray'] =            { 2, httpService:JSONDecode('{"FontColor":"e8e8e8","MainColor":"5a5a5a","AccentColor":"5a5a5a","BackgroundColor":"080808","OutlineColor":"181818"}') },
+        ['Red'] =             { 2, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"181818","AccentColor":"ff0000","BackgroundColor":"141414","OutlineColor":"1f1f1f"}') },
+        ['Rose'] =            { 2, httpService:JSONDecode('{"FontColor":"e8d9e0","MainColor":"120b0e","AccentColor":"a5687a","BackgroundColor":"0a0507","OutlineColor":"1f1418"}') },
+        ['Purple'] =          { 2, httpService:JSONDecode('{"FontColor":"e6e6ff","MainColor":"05000f","AccentColor":"b388ff","BackgroundColor":"0c0015","OutlineColor":"1a0033"}') },
+        ['Pink'] =            { 2, httpService:JSONDecode('{"FontColor":"fdf1fe","MainColor":"0c0c0c","AccentColor":"b97ec5","BackgroundColor":"090909","OutlineColor":"080808"}') },
+		['BBot'] 			= { 3, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1e1e","AccentColor":"7e48a3","BackgroundColor":"232323","OutlineColor":"141414"}') },
+		['Fatality']		= { 4, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1842","AccentColor":"c50754","BackgroundColor":"191335","OutlineColor":"3c355d"}') },
+		['Jester'] 			= { 5, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"db4467","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') },
+		['Mint'] 			= { 6, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"3db488","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') },
+		['Tokyo Night'] 	= { 7, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"191925","AccentColor":"6759b3","BackgroundColor":"16161f","OutlineColor":"323232"}') },
+		['Ubuntu'] 			= { 8, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"3e3e3e","AccentColor":"e2581e","BackgroundColor":"323232","OutlineColor":"191919"}') },
+		['Quartz'] 			= { 9, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"232330","AccentColor":"426e87","BackgroundColor":"1d1b26","OutlineColor":"27232f"}') },
+	}
+
+local Tabs = {
+	Main = Window:AddTab("Main", "user"),
+    Misc = Window:AddTab("Misc", "dices"),
+	Settings = Window:AddTab("Settings", "settings"),
+}
+
+-- ==========================================
+-- 1. SETUP THE STATS PANEL & LABEL FIRST
+-- ==========================================
+local Holder, Container = Library:AddDraggableMenu("Stats Panel")
+
+local Label = Instance.new("TextLabel")
+Label.Text = "Dumplings: 0" 
+Label.Size = UDim2.new(0, 150, 0, 24)
+Label.BackgroundTransparency = 1
+Label.TextColor3 = Color3.new(1, 1, 1)
+Label.ZIndex = 11
+Label.Parent = Container
+
+-- ==========================================
+-- 2. THE TELEPORT + FIRE + JUMP FUNCTION
+-- ==========================================
+-- ==========================================
+-- 2. FIXED & CORRECTED TELEPORT + FIRE + JUMP
+-- ==========================================
+local function teleportAndTouchParts(folder, onUpdate)
+	if not folder then return end
+	
+	local player = game:GetService("Players").LocalPlayer
+	local character = player and player.Character
+	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildWhichIsA("Humanoid")
+	-- Using a foot part is significantly more reliable for collection systems
+	local touchLimb = character and (character:FindFirstChild("LeftFoot") or character:FindFirstChild("Left Leg") or rootPart)
+	
+	if not rootPart or not humanoid then 
+		warn("Character components missing.")
+		return 
+	end
+
+	-- 1. Gather all valid BaseParts
+	local parts = {}
+	for _, child in ipairs(folder:GetChildren()) do
+		if child:IsA("BasePart") then
+			table.insert(parts, child)
+		end
+	end
+
+	local totalParts = #parts
+	
+	-- 2. SORT THEM: Highest Y-position to Lowest Y-position
+	table.sort(parts, function(a, b)
+		return a.Position.Y > b.Position.Y
+	end)
+
+	-- 3. Teleport, Fire Touch, and Jump Sequence
+	local completedCount = 0
+	
+	task.spawn(function()
+		for _, part in ipairs(parts) do
+			-- Re-verify character elements in case of death/resets
+			character = player.Character
+			rootPart = character and character:FindFirstChild("HumanoidRootPart")
+			humanoid = character and character:FindFirstChildWhichIsA("Humanoid")
+			touchLimb = character and (character:FindFirstChild("LeftFoot") or character:FindFirstChild("Left Leg") or rootPart)
+			
+			if part and rootPart and touchLimb and rootPart.Parent then
+				
+				-- STEP A: Teleport right on top of the part
+				rootPart.CFrame = part.CFrame * CFrame.new(0, 2, 0)
+				
+				-- STEP B: CORRRECTED firetouchinterest execution
+				local touchInterest = part:FindFirstChildWhichIsA("TouchInterest")
+				if touchInterest then
+					firetouchinterest(part, touchLimb, 0) -- Fire touch begin
+					task.wait(0.05)                       -- Small delay so the engine actually registers it
+					firetouchinterest(part, touchLimb, 1) -- Fire touch end
+				end
+				
+				-- STEP C: Increment count and update UI
+				completedCount = completedCount + 1
+				if onUpdate then
+					onUpdate(completedCount, totalParts)
+				end
+				
+				-- STEP D: Stay for 5 seconds while auto-jumping
+				local timeSpent = 0
+				local jumpInterval = 0.3
+				
+				while timeSpent < 5 do
+					if humanoid and humanoid.Health > 0 then
+						humanoid.Jump = true
+					else
+						break
+					end
+					
+					task.wait(jumpInterval)
+					timeSpent = timeSpent + jumpInterval
+				end
+			end
+		end
+	end)
+end
+
+local Groupbox = Tabs.Main:AddLeftGroupbox('Dumplings', 'user')
+
+Groupbox:AddButton("TP & Touch All Dumplings", function()
+	local targetFolder = workspace:FindFirstChild("FindableParts")
+	
+	if not targetFolder then
+		Label.Text = "Folder not found!"
+		return
+	end
+	
+	Label.Text = "Starting sequence..."
+	
+	teleportAndTouchParts(targetFolder, function(currentCount, totalCount)
+		Label.Text = "Dumplings: " .. currentCount .. " / " .. totalCount
+	end)
+end)
+
+-- ==========================================
+-- 2. THE TELEPORT + FIRE + JUMP FUNCTION FOR MESHPARTS
+-- ==========================================
+local function teleportAndTouchMeshParts(folder, onUpdate)
+	if not folder then return end
+	
+	local player = game:GetService("Players").LocalPlayer
+	local character = player and player.Character
+	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildWhichIsA("Humanoid")
+	local touchLimb = character and (character:FindFirstChild("LeftFoot") or character:FindFirstChild("Left Leg") or rootPart)
+	
+	if not rootPart or not humanoid then 
+		warn("Character components missing.")
+		return 
+	end
+
+	-- 1. Use GetDescendants to grab EVERYTHING inside, then filter for MeshParts
+	local meshParts = {}
+	for _, descendant in ipairs(folder:GetDescendants()) do
+		if descendant:IsA("MeshPart") then
+			table.insert(meshParts, descendant)
+		end
+	end
+
+	local totalParts = #meshParts
+	
+	-- 2. SORT THEM: Highest Y-position to Lowest Y-position
+	table.sort(meshParts, function(a, b)
+		return a.Position.Y > b.Position.Y
+	end)
+
+	-- 3. Teleport, Fire Touch, and Jump Sequence
+	local completedCount = 0
+	
+	task.spawn(function()
+		for _, part in ipairs(meshParts) do
+			-- Re-verify character elements in case of death/resets during the 5-second wait
+			character = player.Character
+			rootPart = character and character:FindFirstChild("HumanoidRootPart")
+			humanoid = character and character:FindFirstChildWhichIsA("Humanoid")
+			touchLimb = character and (character:FindFirstChild("LeftFoot") or character:FindFirstChild("Left Leg") or rootPart)
+			
+			if part and rootPart and touchLimb and rootPart.Parent then
+				
+				-- STEP A: Teleport 2 studs above the MeshPart
+				rootPart.CFrame = part.CFrame * CFrame.new(0, 2, 0)
+				
+				-- STEP B: Execute firetouchinterest
+				local touchInterest = part:FindFirstChildWhichIsA("TouchInterest")
+				if touchInterest then
+					firetouchinterest(part, touchLimb, 0) -- Fire touch begin
+					task.wait(0.05)                       -- Small delay for engine registry
+					firetouchinterest(part, touchLimb, 1) -- Fire touch end
+				end
+				
+				-- STEP C: Increment count and update UI
+				completedCount = completedCount + 1
+				if onUpdate then
+					onUpdate(completedCount, totalParts)
+				end
+				
+				-- STEP D: Stay for 5 seconds while auto-jumping
+				local timeSpent = 0
+				local jumpInterval = 0.3
+				
+				while timeSpent < 5 do
+					if humanoid and humanoid.Health > 0 then
+						humanoid.Jump = true
+					else
+						break
+					end
+					
+					task.wait(jumpInterval)
+					timeSpent = timeSpent + jumpInterval
+				end
+			end
+		end
+	end)
+end
+
+-- ==========================================
+-- 3. THE UI BUTTON (TARGETING THE NEW PATH)
+-- ==========================================
+Groupbox:AddButton("TP & Touch Grass Coins", function()
+	-- Safeguard path navigation to prevent errors if the path isn't loaded yet
+	local coinsFolder = workspace:FindFirstChild("Coins")
+	local grassFolder = coinsFolder and coinsFolder:FindFirstChild("Grass")
+	
+	if not grassFolder then
+		return
+	end
+	
+	
+	-- Call the sequence
+	teleportAndTouchMeshParts(grassFolder, function(currentCount, totalCount)
+		
+	end)
+end)
+
+local MenuGroup = Tabs.Settings:AddLeftGroupbox("Menu", "wrench")
+
+MenuGroup:AddToggle("KeybindMenuOpen", {
+	Default = Library.KeybindFrame.Visible,
+	Text = "Open Keybind Menu",
+	Callback = function(value)
+		Library.KeybindFrame.Visible = value
+	end,
+})
+MenuGroup:AddToggle("ShowCustomCursor", {
+	Text = "Custom Cursor",
+	Default = true,
+	Callback = function(Value)
+		Library.ShowCustomCursor = Value
+	end,
+})
+MenuGroup:AddDropdown("NotificationSide", {
+	Values = { "Left", "Right" },
+	Default = "Right",
+
+	Text = "Notification Side",
+
+	Callback = function(Value)
+		Library:SetNotifySide(Value)
+	end,
+})
+MenuGroup:AddDropdown("DPIDropdown", {
+	Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+	Default = "100%",
+
+	Text = "DPI Scale",
+
+	Callback = function(Value)
+		Value = Value:gsub("%%", "")
+		local DPI = tonumber(Value)
+
+		Library:SetDPIScale(DPI)
+	end,
+})
+
+MenuGroup:AddSlider("UICornerSlider", {
+	Text = "Corner Radius",
+	Default = Library.CornerRadius,
+	Min = 0,
+	Max = 20,
+	Rounding = 0,
+	Callback = function(value)
+		Window:SetCornerRadius(value)
+	end
+})
+
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind")
+	:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+
+MenuGroup:AddButton("Unload", function()
+	Library:Unload()
+end)
+
+MenuGroup:AddLabel('I LOVE MY WIFE ZEE', true)
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+
+SaveManager:IgnoreThemeSettings()
+
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+
+ThemeManager:SetFolder("coconut")
+SaveManager:SetFolder("coconut/oil-empire")
+SaveManager:SetSubFolder("oil-empire")
+
+SaveManager:BuildConfigSection(Tabs.Settings)
+ThemeManager:AddThemeOptions(Tabs.Settings)
+
+SaveManager:LoadAutoloadConfig()
