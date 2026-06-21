@@ -112,7 +112,7 @@ local CONFIG = {
     StealUnderOffset = Vector3.new(0, -3, 0),-- Teleport slightly under the StealAtc attachment
 
     -- MISC
-    Debug = true,
+    Debug = false,
 }
 
 -- ============================================================
