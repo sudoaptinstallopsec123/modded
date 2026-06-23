@@ -4000,6 +4000,31 @@ BlackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 BlackFrame.BorderSizePixel = 0
 BlackFrame.Visible = false
 
+-- Keep track of the original volumes so we can restore them when unmuted
+local originalVolumes = {}
+
+Others:AddToggle('MuteAmbientMusic', {
+    Text = 'Ambient Music',
+    Default = false,
+    Tooltip = 'Turns on or off ambient music or sounds',
+    Callback = function(Value)
+        local SoundService = game:GetService("SoundService")
+        local allSounds = SoundService:GetDescendants()
+
+        for _, sound in ipairs(allSounds) do
+            if sound:IsA("Sound") then
+                if Value then
+                    -- If toggle is ON, stop the playback (uncheck Playing)
+                    sound.Playing = false
+                else
+                    -- If toggle is OFF, resume the playback (check Playing)
+                    sound.Playing = true
+                end
+            end
+        end
+    end
+})
+
 Others:AddToggle('NoGraphics', {
     Text = 'No Graphics',
     Default = false,
@@ -4089,7 +4114,7 @@ end)
 local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu', 'logs')
 
 MenuGroup:AddButton('Unload', function() Library:Unload() end)
-MenuGroup:AddButton('Join Discord', function() Library:Notify("Copied to clipboard.") setclipboard("https://discord.gg/EsA7Zeh8rN") end)
+MenuGroup:AddButton('Join Discord', function() Library:Notify("Copied to clipboard.") setclipboard("https://discord.gg/UkPDe8hF4p") end)
 MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'RightShift', NoUI = true, Text = 'Menu keybind' })
 
 Library.ToggleKeybind = Options.MenuKeybind
