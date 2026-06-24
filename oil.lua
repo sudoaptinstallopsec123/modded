@@ -112,7 +112,7 @@ local CONFIG = {
     StealUnderOffset = Vector3.new(0, -3, 0),-- Teleport slightly under the StealAtc attachment
 
     -- MISC
-    Debug = false,
+    Debug = true,
 }
 
 -- ============================================================
@@ -230,7 +230,7 @@ local function FindRefineries(plot)
         if child:IsA("Model") then
             local typeAttr = child:GetAttribute("Type")
             Log("  Checking:", child.Name, "| Type:", tostring(typeAttr))
-            if typeAttr == "Refinery" then
+            if typeAttr == "Refinery" or typeAttr == "SolarPanel" then
                 table.insert(refineries, child)
                 Log("  -> Refinery found:", child.Name)
             end
@@ -1380,6 +1380,113 @@ MiscFeatures:AddButton({
         RedeemAllCodes()
     end
 })
+
+MiscFeatures:AddButton({
+    Text = 'TP to lowest player server',
+    Func = function()
+        do
+            local HttpService = game:GetService("HttpService")
+            local TeleportService = game:GetService("TeleportService")
+            local placeId = game.PlaceId
+
+            local lowestServer = nil
+            local lowestPlayers = math.huge
+            local cursor = ""
+
+            repeat
+                local url = string.format(
+                    "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100&cursor=%s",
+                    placeId, cursor
+                )
+
+                local success, result = pcall(function()
+                    return HttpService:JSONDecode(game:HttpGet(url))
+                end)
+
+                if not success or not result or not result.data then break end
+
+                for _, server in ipairs(result.data) do
+                    if server.playing < lowestPlayers and server.playing > 0 then
+                        lowestPlayers = server.playing
+                        lowestServer = server.id
+                    end
+                end
+
+                cursor = result.nextPageCursor or ""
+            until cursor == "" or cursor == nil
+
+            if lowestServer then
+                print("[Server Hop] Joining server with " .. lowestPlayers .. " player(s). Job ID: " .. lowestServer)
+                TeleportService:TeleportToPlaceInstance(placeId, lowestServer, game:GetService("Players").LocalPlayer)
+            else
+                print("[Server Hop] No valid server found.")
+            end
+        end
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports to the lowest player server'
+})
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BackgroundCover"
+ScreenGui.DisplayOrder = -999999 
+ScreenGui.IgnoreGuiInset = true 
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local BlackFrame = Instance.new("Frame", ScreenGui)
+BlackFrame.Size = UDim2.new(1, 0, 1, 0)
+BlackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+BlackFrame.BorderSizePixel = 0
+BlackFrame.Visible = false
+
+MiscFeatures:AddToggle('NoGraphics', {
+    Text = 'No Graphics',
+    Default = false,
+    Tooltip = 'Disables 3D rendering with a black background',
+    Callback = function(Value)
+        do
+            game:GetService("RunService"):Set3dRenderingEnabled(not Value)
+            BlackFrame.Visible = Value
+        end
+    end
+})
+
+local isFPSEnabled = false
+local currentFPSCap = 60 
+
+MiscFeatures:AddToggle('SetFPS', {
+    Text = 'FPS Cap',
+    Default = false,
+    Tooltip = 'Caps the game FPS at the slider value',
+    Callback = function(Value)
+        do
+            isFPSEnabled = Value
+            if isFPSEnabled then
+                setfpscap(currentFPSCap)
+            else
+                setfpscap(0) 
+            end
+        end
+    end
+})
+
+MiscFeatures:AddSlider('FPSCap', {
+    Text = 'FPS Cap Value',
+    Default = 60,
+    Min = 1,
+    Max = 240,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        do
+            currentFPSCap = Value
+            if isFPSEnabled then
+                setfpscap(Value)
+            end
+        end
+    end
+})
+
 
 local MenuGroup = Tabs.Settings:AddLeftGroupbox("Menu", "wrench")
 
