@@ -2,6 +2,21 @@
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
+local MarketPlaceService = game:GetService("MarketplaceService")
+
+-- --- CONFIGURATION ---
+-- If set to "AUTO", it will automatically fetch the current game's actual name!
+local GameNameSetting = "AUTO" 
+-- ---------------------
+
+-- Resolve Game Name automatically if set to AUTO
+local actualGameName = GameNameSetting
+if GameNameSetting == "AUTO" then
+    local success, info = pcall(function()
+        return MarketPlaceService:GetProductInfo(game.PlaceId)
+    end)
+    actualGameName = (success and info and info.Name) or "unknown universe"
+end
 
 -- 1. Create Container inside CoreGui
 local screenGui = Instance.new("ScreenGui")
@@ -32,8 +47,8 @@ backgroundFrame.Parent = screenGui
 
 local uiGradient = Instance.new("UIGradient")
 uiGradient.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 5))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 5))
 })
 uiGradient.Rotation = 45
 uiGradient.Parent = backgroundFrame
@@ -41,26 +56,59 @@ uiGradient.Parent = backgroundFrame
 -- 4. Safe Center Content Canvas
 local canvas = Instance.new("Frame")
 canvas.Name = "CenterCanvas"
-canvas.Size = UDim2.new(0, 500, 0, 200)
+canvas.Size = UDim2.new(0, 600, 0, 250)
 canvas.Position = UDim2.new(0.5, 0, 0.5, 0)
 canvas.AnchorPoint = Vector2.new(0.5, 0.5)
 canvas.BackgroundTransparency = 1
 canvas.Parent = backgroundFrame
 
+-- Layout structure to handle spacing automatically
+local uiListLayout = Instance.new("UIListLayout")
+uiListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+uiListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+uiListLayout.Padding = UDim.new(0, 8) -- Tweaked slightly for better visual breathing room
+uiListLayout.Parent = canvas
+
 -- 5. Premium "coconut.xyz" Text Splash Logo
 local logoText = Instance.new("TextLabel")
 logoText.Name = "LogoText"
-logoText.Size = UDim2.new(1, 0, 0.2, 0) -- Scaled down start size for pop effect
-logoText.Position = UDim2.new(0.5, 0, 0.5, 0)
-logoText.AnchorPoint = Vector2.new(0.5, 0.5)
+logoText.LayoutOrder = 1
+logoText.Size = UDim2.new(1, 0, 0, 60)
 logoText.BackgroundTransparency = 1
 logoText.Text = "coconut.xyz"
 logoText.Font = Enum.Font.GothamBold
-logoText.TextColor3 = Color3.fromRGB(255, 255, 255)
+logoText.TextColor3 = Color3.fromRGB(255, 255, 255) -- Pure Crisp White
 logoText.TextSize = 54
 logoText.TextTransparency = 1 -- Hidden initially
 logoText.Parent = canvas
 
+-- 6. Clean Muted Gray Game Name Subtitle
+local gameLabel = Instance.new("TextLabel")
+gameLabel.Name = "GameLabel"
+gameLabel.LayoutOrder = 2
+gameLabel.Size = UDim2.new(1, 0, 0, 24)
+gameLabel.BackgroundTransparency = 1
+gameLabel.Text = string.lower(actualGameName) -- Modern lowercase look
+gameLabel.Font = Enum.Font.Code -- Clean developer/tech style font
+gameLabel.TextColor3 = Color3.fromRGB(160, 160, 160) -- Muted silver gray contrast
+gameLabel.TextSize = 18 
+gameLabel.TextTransparency = 1 -- Hidden initially
+gameLabel.Parent = canvas
+
+-- 7. Dedicated Wife Dedication Label + Native Neon Glow
+local wifeLabel = Instance.new("TextLabel")
+wifeLabel.Name = "WifeLabel"
+wifeLabel.LayoutOrder = 3
+wifeLabel.Size = UDim2.new(1, 0, 0, 30) -- Matches layout width perfectly
+wifeLabel.BackgroundTransparency = 1
+wifeLabel.Text = "I LOVE MY WIFE ZEE"
+wifeLabel.Font = Enum.Font.GothamBold
+wifeLabel.TextColor3 = Color3.fromRGB(211, 170, 50) -- Utilizing your preferred accent color (#aeab89)
+wifeLabel.TextSize = 16
+wifeLabel.TextTransparency = 1 -- Hidden initially
+wifeLabel.ZIndex = 2
+wifeLabel.Parent = canvas
 
 -- --- SPEED TIMELINE (Exact 2-Second Sequence) ---
 
@@ -73,15 +121,22 @@ local outroInfo = TweenInfo.new(outroTime, Enum.EasingStyle.Quad, Enum.EasingDir
 
 -- [0.0s to 0.5s]: Fast Premium Intro Splash
 TweenService:Create(backgroundFrame, introInfo, {BackgroundTransparency = 0.45}):Play()
-TweenService:Create(logoText, introInfo, {TextTransparency = 0, Size = UDim2.new(1, 0, 0.5, 0)}):Play()
+TweenService:Create(logoText, introInfo, {TextTransparency = 0}):Play()
+TweenService:Create(gameLabel, introInfo, {TextTransparency = 0}):Play()
 
+-- Fading in your dedication text and glow smoothly here!
+TweenService:Create(wifeLabel, introInfo, {TextTransparency = 0}):Play()
 task.wait(introTime)
 
 -- [0.5s to 1.5s]: Screen Static Hold
 task.wait(holdTime)
 
 -- [1.5s to 2.0s]: Smooth Cinematic Dissolve
-TweenService:Create(logoText, outroInfo, {TextTransparency = 1, Size = UDim2.new(1, 0, 0.6, 0)}):Play()
+TweenService:Create(logoText, outroInfo, {TextTransparency = 1}):Play()
+TweenService:Create(gameLabel, outroInfo, {TextTransparency = 1}):Play()
+
+-- Fading out your dedication text and glow smoothly here!
+TweenService:Create(wifeLabel, outroInfo, {TextTransparency = 1}):Play()
 TweenService:Create(blurEffect, outroInfo, {Size = 0}):Play()
 TweenService:Create(dofEffect, outroInfo, {FarIntensity = 0, NearIntensity = 0}):Play()
 
